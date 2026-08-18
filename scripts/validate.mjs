@@ -11,6 +11,10 @@ if (manifest.manifest_version !== 3) {
   throw new Error("manifest_version must be 3");
 }
 
+if (JSON.stringify(manifest).includes(".svg")) {
+  throw new Error("SVG icons are not supported by Chrome extension icon fields");
+}
+
 const files = [
   "service-worker.js",
   "content-script.js",
@@ -20,7 +24,6 @@ const files = [
   "options.html",
   "options.js",
   "options.css",
-  "icons/icon.svg",
   "PRIVACY.md",
   "README.md"
 ];

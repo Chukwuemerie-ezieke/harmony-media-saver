@@ -17,14 +17,14 @@ It does **not** rip DRM-protected streams, bypass paywalls, or download unauthor
 
 ## Install in Chrome
 
-1. Open [https://github.com/Chukwuemerie-ezieke/harmony-media-saver](https://github.com/Chukwuemerie-ezieke/harmony-media-saver)
-2. Click **Code → Download ZIP** and unzip the folder
-3. Open `chrome://extensions`
-4. Enable **Developer mode**
-5. Click **Load unpacked** and select the unzipped project folder (the folder that contains `manifest.json`)
+1. Download the latest ZIP from [the repository](https://github.com/Chukwuemerie-ezieke/harmony-media-saver)
+2. Unzip it. You should see `harmony-media-saver-main/manifest.json`
+3. Open `chrome://extensions` and enable **Developer mode**
+4. Click **Load unpacked**
+5. Select `harmony-media-saver-main` itself, not Downloads and not the zip
 6. Pin **Harmony Media Saver** from the puzzle-piece menu
 
-Full walkthrough: [docs/INSTALL.md](docs/INSTALL.md)
+If Chrome refuses to load, you likely selected the parent folder or an older copy that used an SVG icon. Use this latest code and see [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Use
 
@@ -32,6 +32,8 @@ Full walkthrough: [docs/INSTALL.md](docs/INSTALL.md)
 2. Start playback if the file is lazy-loaded
 3. Click the extension icon
 4. Choose **Download** on a detected file
+
+Known-good test page: [examples/test-media.html](examples/test-media.html)
 
 User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
 
