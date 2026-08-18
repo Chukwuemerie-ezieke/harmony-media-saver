@@ -1,0 +1,9 @@
+{
+  "name": "harmony-media-saver",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome extension that saves direct downloadable audio and video files through Chrome's download manager.",
+  "scripts": {
+    "validate": "node scripts/validate.mjs"
+  }
+}

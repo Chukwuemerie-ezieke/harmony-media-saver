@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harmony Media Saver</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">Harmony Digital Consults</p>
+          <h1>Media Saver</h1>
+        </div>
+        <div class="header-actions">
+          <button id="scanButton" type="button">Scan</button>
+          <button id="optionsButton" type="button" title="Options">⚙</button>
+        </div>
+      </header>
+
+      <p id="status">Checking this tab…</p>
+
+      <nav class="filters" aria-label="Filter media">
+        <button type="button" data-filter="all" class="active">All</button>
+        <button type="button" data-filter="video">Video</button>
+        <button type="button" data-filter="audio">Audio</button>
+        <button type="button" data-filter="playlist">Playlists</button>
+      </nav>
+
+      <section id="candidateList" aria-live="polite"></section>
+
+      <footer>
+        <button id="clearButton" type="button">Clear list</button>
+        <span>Only save media you are authorized to download.</span>
+      </footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
