@@ -11,6 +11,8 @@ const {
   totalSizeFromHeaders,
   isAllowed,
   normalizeSettings,
+  mergeManaged,
+  buildRelativePath,
   mediaLinkPatterns
 } = self.HarmonyShared;
 
@@ -35,9 +37,23 @@ function headerValue(headers = [], name) {
   return headers.find((header) => header.name.toLowerCase() === lower)?.value || "";
 }
 
+// Policy an administrator sets through Chrome (Google Admin console or
+// enterprise policy). Empty for most users.
+async function getManagedPolicy() {
+  try {
+    return (await chrome.storage.managed.get(null)) || {};
+  } catch {
+    return {};
+  }
+}
+
+async function getSettingsState() {
+  const [data, managed] = await Promise.all([chrome.storage.local.get(SETTINGS_KEY), getManagedPolicy()]);
+  return mergeManaged(data[SETTINGS_KEY], managed);
+}
+
 async function getSettings() {
-  const data = await chrome.storage.local.get(SETTINGS_KEY);
-  return normalizeSettings(data[SETTINGS_KEY]);
+  return (await getSettingsState()).settings;
 }
 
 async function getCandidatesMap() {
@@ -49,12 +65,12 @@ async function setCandidatesMap(map) {
   await chrome.storage.session.set({ [CANDIDATES_KEY]: map });
 }
 
-async function tabUrls(tabId) {
+async function tabInfo(tabId) {
   try {
     const tab = await chrome.tabs.get(tabId);
-    return [tab.url, tab.pendingUrl].filter(Boolean);
+    return { urls: [tab.url, tab.pendingUrl].filter(Boolean), title: tab.title || "" };
   } catch {
-    return [];
+    return { urls: [], title: "" };
   }
 }
 
@@ -80,7 +96,7 @@ function addCandidates(tabId, incoming, context = []) {
   if (!tabId || tabId < 0 || !incoming?.length) return Promise.resolve();
   return serialized(async () => {
     const settings = await getSettings();
-    const pageUrls = await tabUrls(tabId);
+    const { urls: pageUrls, title: pageTitle } = await tabInfo(tabId);
     const map = await getCandidatesMap();
     const next = [...(map[tabId] || [])];
     let changed = false;
@@ -98,6 +114,22 @@ function addCandidates(tabId, incoming, context = []) {
       const contentLength = Number(item.contentLength || 0);
       const existing = next.find((candidate) => candidate.url === item.url);
       if (existing) {
+        // The page script often reports a file before its network response
+        // arrives. The response knows the real type and file name, so it
+        // upgrades the entry.
+        if (item.fromNetwork && !existing.fromNetwork) {
+          existing.fromNetwork = true;
+          existing.contentType = item.contentType || existing.contentType;
+          existing.kind = kind;
+          existing.filename = sanitizeFilename(
+            withExtension(item.filename || existing.filename, existing.contentType)
+          );
+          changed = true;
+        }
+        if (pageTitle && !existing.pageTitle) {
+          existing.pageTitle = pageTitle;
+          changed = true;
+        }
         // Later responses (e.g. a ranged request) may carry a better size.
         if (contentLength > (existing.contentLength || 0)) {
           existing.contentLength = contentLength;
@@ -115,7 +147,9 @@ function addCandidates(tabId, incoming, context = []) {
         contentType: item.contentType || "",
         contentLength,
         kind,
+        fromNetwork: Boolean(item.fromNetwork),
         pageUrl: pageUrls[0] || "",
+        pageTitle,
         detectedAt: Date.now()
       });
       changed = true;
@@ -146,20 +180,27 @@ function recordHistory(entry) {
   });
 }
 
-async function startDownload({ url, filename, pageUrl = "", source }) {
+async function startDownload({ url, filename, pageUrl = "", pageTitle = "", kind = "", source, saveAs }) {
   const settings = await getSettings();
   const safeName = sanitizeFilename(filename || filenameFromUrl(url));
+  const relativePath = buildRelativePath(settings.filenameTemplate, {
+    filename: safeName,
+    pageUrl,
+    pageTitle,
+    kind
+  });
   const downloadId = await chrome.downloads.download({
     url,
-    filename: `${sanitizeFilename(settings.folderName)}/${safeName}`,
+    filename: `${sanitizeFilename(settings.folderName)}/${relativePath}`,
     conflictAction: "uniquify",
-    saveAs: settings.saveAs
+    saveAs: saveAs ?? settings.saveAs
   });
 
   await recordHistory({
     id: crypto.randomUUID(),
     url,
     filename: safeName,
+    path: relativePath,
     pageUrl,
     source,
     downloadId,
@@ -241,6 +282,7 @@ chrome.webRequest.onHeadersReceived.addListener(
       [
         {
           url: details.url,
+          fromNetwork: true,
           filename: dispositionName || filenameFromUrl(details.url, contentType),
           contentType,
           contentLength: totalSizeFromHeaders(
@@ -277,11 +319,40 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     url,
     filename: filenameFromUrl(url),
     pageUrl: info.pageUrl || tab?.url || "",
+    pageTitle: tab?.title || "",
+    kind: classify(url, ""),
     source: "context-menu"
   });
 });
 
 // --- Messages ------------------------------------------------------------
+
+async function downloadCandidate(tabId, candidateId, { source, saveAs } = {}) {
+  const map = await getCandidatesMap();
+  const candidate = (map[tabId] || []).find((item) => item.id === candidateId);
+  if (!candidate) return { ok: false, error: "That media item is no longer available." };
+  if (candidate.kind === "playlist") {
+    return { ok: false, error: "This is a streaming playlist, not a single downloadable file." };
+  }
+  const settings = await getSettings();
+  if (!isAllowed([candidate.url, candidate.pageUrl].filter(Boolean), settings)) {
+    return { ok: false, error: "This site is blocked by your settings." };
+  }
+  try {
+    const downloadId = await startDownload({
+      url: candidate.url,
+      filename: candidate.filename,
+      pageUrl: candidate.pageUrl,
+      pageTitle: candidate.pageTitle,
+      kind: candidate.kind,
+      source,
+      saveAs
+    });
+    return { ok: true, downloadId };
+  } catch (error) {
+    return { ok: false, error: error?.message || String(error) };
+  }
+}
 
 function isExtensionPage(sender) {
   return sender.id === chrome.runtime.id && String(sender.url || "").startsWith(EXTENSION_ORIGIN);
@@ -320,13 +391,21 @@ async function handleExtensionPageMessage(message) {
       await clearCandidates(tabId);
       return { ok: true };
 
-    case "GET_SETTINGS":
-      return { settings: await getSettings(), defaults: normalizeSettings(DEFAULT_SETTINGS) };
+    case "GET_SETTINGS": {
+      const { settings, managedKeys } = await getSettingsState();
+      return {
+        settings,
+        managedKeys,
+        defaults: normalizeSettings(DEFAULT_SETTINGS),
+        version: chrome.runtime.getManifest().version
+      };
+    }
 
     case "SAVE_SETTINGS": {
-      const settings = normalizeSettings(message.settings);
-      await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
-      return { ok: true, settings };
+      // Stored as the user's own choice; managed policy is applied on read.
+      await chrome.storage.local.set({ [SETTINGS_KEY]: normalizeSettings(message.settings) });
+      const { settings, managedKeys } = await getSettingsState();
+      return { ok: true, settings, managedKeys };
     }
 
     case "GET_HISTORY": {
@@ -338,24 +417,25 @@ async function handleExtensionPageMessage(message) {
       await serialized(() => chrome.storage.local.set({ [HISTORY_KEY]: [] }));
       return { ok: true };
 
-    case "DOWNLOAD_CANDIDATE": {
-      const map = await getCandidatesMap();
-      const candidate = (map[tabId] || []).find((item) => item.id === message.candidateId);
-      if (!candidate) return { ok: false, error: "That media item is no longer available." };
-      if (candidate.kind === "playlist") {
-        return { ok: false, error: "This is a streaming playlist, not a single downloadable file." };
+    case "DOWNLOAD_CANDIDATE":
+      return downloadCandidate(tabId, message.candidateId, { source: "popup" });
+
+    case "DOWNLOAD_CANDIDATES": {
+      // One Save As dialog per file would be unusable for a batch, so batch
+      // downloads always go straight to the download folder.
+      const ids = Array.isArray(message.candidateIds) ? message.candidateIds.slice(0, 100) : [];
+      const results = [];
+      for (const id of ids) {
+        results.push({ id, ...(await downloadCandidate(tabId, id, { source: "batch", saveAs: false })) });
       }
-      const settings = await getSettings();
-      if (!isAllowed([candidate.url, candidate.pageUrl].filter(Boolean), settings)) {
-        return { ok: false, error: "This site is blocked by your settings." };
-      }
-      const downloadId = await startDownload({
-        url: candidate.url,
-        filename: candidate.filename,
-        pageUrl: candidate.pageUrl,
-        source: "popup"
-      });
-      return { ok: true, downloadId };
+      const failed = results.filter((result) => !result.ok);
+      return {
+        ok: failed.length === 0,
+        started: results.length - failed.length,
+        total: results.length,
+        results,
+        error: failed[0]?.error
+      };
     }
 
     default:

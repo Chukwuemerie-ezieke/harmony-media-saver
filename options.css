@@ -7,6 +7,8 @@
   font-family: "Segoe UI", system-ui, sans-serif;
 }
 
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   color: var(--text);
@@ -73,3 +75,27 @@ button[type="button"] { background: #e4eeee; color: #01484c; }
 
 ul { padding-left: 18px; }
 li { margin: 8px 0; color: var(--muted); word-break: break-all; }
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  background: #fff;
+}
+
+.muted { color: var(--muted); margin: 0; }
+.notice {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fbf3d9;
+  color: #6b5410;
+}
+.notice[hidden] { display: none; }
+.preview { font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
+.indent { margin-top: -10px; padding-left: 26px; }
+.actions.start { justify-content: flex-start; }
+label.managed { opacity: 0.6; }
+input:disabled, textarea:disabled, select:disabled { background: #eef2f2; cursor: not-allowed; }
+label small { font-weight: 400; }

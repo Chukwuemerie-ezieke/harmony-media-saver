@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Harmony Media Saver",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Finds direct downloadable audio and video files on the current page and saves them with Chrome's download manager.",
   "homepage_url": "https://github.com/Chukwuemerie-ezieke/harmony-media-saver",
   "minimum_chrome_version": "116",
@@ -36,6 +36,9 @@
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
+  },
+  "storage": {
+    "managed_schema": "managed_schema.json"
   },
   "content_scripts": [
     {

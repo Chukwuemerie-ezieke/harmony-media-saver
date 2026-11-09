@@ -126,3 +126,38 @@ footer span {
   font-size: 11px;
   line-height: 1.4;
 }
+
+.batch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.batch[hidden] { display: none; }
+
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#downloadSelected {
+  color: #fff;
+  background: var(--teal);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 650;
+}
+#downloadSelected:disabled { opacity: 0.5; cursor: default; }
+
+.candidate .pick, .candidate .pick-spacer {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--teal);
+}
+.candidate .meta { flex: 1 1 auto; }

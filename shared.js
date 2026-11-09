@@ -59,8 +59,14 @@
     blockedHosts: DEFAULT_BLOCKED_HOSTS,
     allowlistHosts: [],
     maxCandidates: 50,
-    showPlaylists: true
+    showPlaylists: true,
+    filenameTemplate: "{filename}",
+    language: "auto"
   };
+
+  const LANGUAGE_CODES = ["auto", "en", "ha", "yo", "ig", "pcm"];
+  const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
+  const TEMPLATE_TOKENS = ["filename", "name", "ext", "site", "title", "date", "kind"];
 
   const CONTENT_TYPE_EXTENSIONS = {
     "video/mp4": "mp4",
@@ -221,14 +227,106 @@
   function normalizeSettings(input) {
     const raw = { ...DEFAULT_SETTINGS, ...(input || {}) };
     const max = Math.round(Number(raw.maxCandidates));
+    const template = String(raw.filenameTemplate ?? "").trim().slice(0, 200);
     return {
       saveAs: Boolean(raw.saveAs),
       showPlaylists: Boolean(raw.showPlaylists),
       folderName: sanitizeFilename(String(raw.folderName || "").trim() || DEFAULT_SETTINGS.folderName).slice(0, 80),
       maxCandidates: Number.isFinite(max) ? Math.min(100, Math.max(5, max)) : DEFAULT_SETTINGS.maxCandidates,
       blockedHosts: normalizeHostList(raw.blockedHosts),
-      allowlistHosts: normalizeHostList(raw.allowlistHosts)
+      allowlistHosts: normalizeHostList(raw.allowlistHosts),
+      filenameTemplate: template || DEFAULT_SETTINGS.filenameTemplate,
+      language: LANGUAGE_CODES.includes(raw.language) ? raw.language : DEFAULT_SETTINGS.language
     };
+  }
+
+  /**
+   * Combine the user's settings with policy set by an administrator
+   * (chrome.storage.managed). Managed values win; managed blocked hosts are
+   * added to the user's list so they cannot be removed.
+   */
+  function mergeManaged(local, managed) {
+    const policy = managed && typeof managed === "object" ? managed : {};
+    const managedKeys = SETTING_KEYS.filter((key) => policy[key] !== undefined);
+    const merged = { ...normalizeSettings(local) };
+    for (const key of managedKeys) {
+      merged[key] =
+        key === "blockedHosts"
+          ? [...(Array.isArray(policy.blockedHosts) ? policy.blockedHosts : []), ...merged.blockedHosts]
+          : policy[key];
+    }
+    return { settings: normalizeSettings(merged), managedKeys };
+  }
+
+  function exportSettings(settings, version = "") {
+    return {
+      app: "harmony-media-saver",
+      version,
+      exportedAt: new Date().toISOString(),
+      settings: normalizeSettings(settings)
+    };
+  }
+
+  // Accepts an exported file or a bare settings object. Throws on bad input.
+  function parseImportedSettings(text) {
+    let data;
+    try {
+      data = JSON.parse(String(text));
+    } catch {
+      throw new Error("The file is not valid JSON.");
+    }
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new Error("The file does not contain settings.");
+    }
+    const settings = data.app === "harmony-media-saver" ? data.settings : data;
+    if (!settings || typeof settings !== "object" || !SETTING_KEYS.some((key) => key in settings)) {
+      throw new Error("The file does not contain Harmony Media Saver settings.");
+    }
+    const picked = {};
+    for (const key of SETTING_KEYS) if (key in settings) picked[key] = settings[key];
+    return normalizeSettings(picked);
+  }
+
+  function localDate(date) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  /**
+   * Turn a template such as "{site}/{title}/{filename}" into a safe relative
+   * path. Each folder is sanitized on its own; empty folders are dropped and
+   * the file always keeps its extension.
+   */
+  function buildRelativePath(template, info = {}, date = new Date()) {
+    const filename = sanitizeFilename(info.filename || "media-download");
+    const dot = filename.lastIndexOf(".");
+    const name = dot > 0 ? filename.slice(0, dot) : filename;
+    const ext = dot > 0 ? filename.slice(dot + 1) : "";
+    const values = {
+      filename,
+      name,
+      ext,
+      site: hostnameOf(info.pageUrl || "").replace(/^www\./, "") || "unknown-site",
+      title: String(info.pageTitle || "").trim().slice(0, 80) || "untitled",
+      date: localDate(date),
+      kind: info.kind || "media"
+    };
+
+    const segments = String(template || DEFAULT_SETTINGS.filenameTemplate)
+      .split(/[\\/]+/)
+      .map((segment) =>
+        segment.replace(/\{(\w+)\}/g, (match, token) =>
+          TEMPLATE_TOKENS.includes(token) ? values[token] : match
+        )
+      )
+      .map((segment) => segment.trim())
+      .filter((segment) => segment && segment !== "." && segment !== "..")
+      .map((segment) => sanitizeFilename(segment.replace(/[\\/]/g, "-")).slice(0, 80));
+
+    const folders = segments.slice(0, -1).slice(0, 4);
+    let file = segments.at(-1) || filename;
+    if (ext && !file.toLowerCase().endsWith(`.${ext.toLowerCase()}`)) file = `${file}.${ext}`;
+    return [...folders, sanitizeFilename(file)].join("/");
   }
 
   // URL patterns for the context menu so it only shows on media links.
@@ -255,6 +353,13 @@
     STREAMING_CDN_HOSTS,
     DEFAULT_BLOCKED_HOSTS,
     DEFAULT_SETTINGS,
+    LANGUAGE_CODES,
+    SETTING_KEYS,
+    TEMPLATE_TOKENS,
+    mergeManaged,
+    exportSettings,
+    parseImportedSettings,
+    buildRelativePath,
     hostnameOf,
     normalizeHost,
     hostMatches,

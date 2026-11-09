@@ -9,6 +9,10 @@ It does **not** rip DRM-protected streams, bypass paywalls, or download unauthor
 - Detects media from network responses (`video/*`, `audio/*`, and common file extensions)
 - Scans `<video>` and `<audio>` elements already exposed by the page, including inside embedded frames
 - Popup list with type, size, and source filename
+- Batch download: select several files and save them in one go
+- File name patterns such as `{site}/{title}/{filename}` to organise downloads by site and course
+- Interface in English, Hausa, Yorùbá, Igbo and Nigerian Pidgin (non-English translations are drafts)
+- Export/import settings, and central settings for schools through Chrome policy ([admin guide](docs/ADMIN_GUIDE.md))
 - Optional "Save as" dialog and custom download folder name
 - Download history stored locally in the browser
 - Host blocklist (YouTube, major streaming sites and their media CDNs blocked by default), checked against the media host, the page and any embedded player
