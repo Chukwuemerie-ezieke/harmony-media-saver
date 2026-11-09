@@ -12,5 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - run: npm run validate
+          node-version: 22
+      - name: Validate package (manifest, files, icons, syntax)
+        run: npm run validate
+      - name: Unit tests
+        run: npm test

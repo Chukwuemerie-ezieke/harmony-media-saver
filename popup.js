@@ -15,13 +15,7 @@ function formatBytes(bytes) {
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
+const { escapeHtml } = globalThis.HarmonyShared;
 
 async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -67,7 +61,9 @@ async function loadCandidates(nextCandidates) {
   activeTabId = tab.id;
 
   if (!tab.url || !/^https?:/.test(tab.url)) {
-    statusElement.textContent = "Open a regular website first.";
+    statusElement.textContent = tab.url?.startsWith("file:")
+      ? "Local files are not scanned. Serve the page over http (see the user guide)."
+      : "Open a regular website first.";
     candidates = [];
     render();
     return;
@@ -80,12 +76,28 @@ async function loadCandidates(nextCandidates) {
     candidates = result?.candidates || [];
   }
 
+  showCount();
+  render();
+}
+
+function showCount() {
   const downloadable = candidates.filter((item) => item.kind !== "playlist").length;
   statusElement.textContent = downloadable
     ? `${downloadable} downloadable file${downloadable === 1 ? "" : "s"} found.`
     : "No direct media file found yet.";
-  render();
 }
+
+// Keep the list live while the popup is open (late frames, lazy players).
+chrome.storage.session.onChanged.addListener((changes) => {
+  const change = changes.candidatesByTab;
+  if (!change || activeTabId == null) return;
+  const next = change.newValue?.[activeTabId] || [];
+  const ids = (list) => list.map((item) => `${item.id}:${item.contentLength}`).join();
+  if (ids(next) === ids(candidates)) return;
+  candidates = next;
+  showCount();
+  render();
+});
 
 listElement.addEventListener("click", async (event) => {
   const downloadId = event.target.dataset.download;

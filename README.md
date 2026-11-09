@@ -7,11 +7,11 @@ It does **not** rip DRM-protected streams, bypass paywalls, or download unauthor
 ## Features
 
 - Detects media from network responses (`video/*`, `audio/*`, and common file extensions)
-- Scans `<video>` and `<audio>` elements already exposed by the page
+- Scans `<video>` and `<audio>` elements already exposed by the page, including inside embedded frames
 - Popup list with type, size, and source filename
 - Optional "Save as" dialog and custom download folder name
 - Download history stored locally in the browser
-- Host blocklist (YouTube and major streaming sites blocked by default)
+- Host blocklist (YouTube, major streaming sites and their media CDNs blocked by default), checked against the media host, the page and any embedded player
 - Optional allowlist for school portals and your own LMS
 - Streaming playlists (`.m3u8`, `.mpd`) are labeled unsupported in v1
 
@@ -24,7 +24,7 @@ It does **not** rip DRM-protected streams, bypass paywalls, or download unauthor
 5. Select `harmony-media-saver-main` itself, not Downloads and not the zip
 6. Pin **Harmony Media Saver** from the puzzle-piece menu
 
-If Chrome refuses to load, you likely selected the parent folder or an older copy that used an SVG icon. Use this latest code and see [docs/INSTALL.md](docs/INSTALL.md).
+If Chrome refuses to load, you likely selected the parent folder or an older copy. Use this latest code and see [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Use
 
@@ -33,7 +33,7 @@ If Chrome refuses to load, you likely selected the parent folder or an older cop
 3. Click the extension icon
 4. Choose **Download** on a detected file
 
-Known-good test page: [examples/test-media.html](examples/test-media.html)
+Known-good test page: run `npm run example` and open <http://localhost:8080/test-media.html>. Opening [examples/test-media.html](examples/test-media.html) straight from disk does not work, because `file://` pages are not scanned.
 
 User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
 
@@ -55,7 +55,9 @@ See [PRIVACY.md](PRIVACY.md).
 ```bash
 git clone https://github.com/Chukwuemerie-ezieke/harmony-media-saver.git
 cd harmony-media-saver
-npm run validate
+npm run validate   # manifest, files, icons, script syntax
+npm test           # unit tests for shared.js
+npm run example    # serve the test page on http://localhost:8080
 ```
 
 Load the repo folder as an unpacked extension after each change, then click **Reload** on `chrome://extensions`.

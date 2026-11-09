@@ -1,0 +1,280 @@
+/*
+ * Shared helpers for Harmony Media Saver.
+ *
+ * Loaded as a classic script by the service worker (importScripts), the
+ * content script (listed before it in the manifest) and the extension pages,
+ * and as a CommonJS module by the Node test suite.
+ */
+(function (root) {
+  const AUDIO_EXTENSIONS = ["mp3", "m4a", "aac", "wav", "ogg", "oga", "opus", "flac"];
+  const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "m4v", "ogv", "mkv", "avi"];
+  const PLAYLIST_EXTENSIONS = ["m3u8", "mpd"];
+
+  const extensionPattern = (list) => new RegExp(`\\.(${list.join("|")})(?:$|[?#])`, "i");
+  const AUDIO_EXT = extensionPattern(AUDIO_EXTENSIONS);
+  const MEDIA_EXT = extensionPattern([...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS]);
+  const PLAYLIST_EXT = extensionPattern(PLAYLIST_EXTENSIONS);
+
+  // Streaming sites, plus the CDNs they serve media from. The CDN entries
+  // matter because a site's video bytes rarely come from the site's own host.
+  const STREAMING_CDN_HOSTS = [
+    "googlevideo.com",
+    "nflxvideo.net",
+    "cdninstagram.com",
+    "fbcdn.net",
+    "tiktokcdn.com",
+    "tiktokcdn-us.com",
+    "tiktokv.com",
+    "ttvnw.net",
+    "scdn.co",
+    "spotifycdn.com",
+    "dssott.com",
+    "bamgrid.com",
+    "hulustream.com",
+    "aiv-cdn.net",
+    "aiv-delivery.net"
+  ];
+
+  const DEFAULT_BLOCKED_HOSTS = [
+    "youtube.com",
+    "youtu.be",
+    "youtube-nocookie.com",
+    "netflix.com",
+    "disneyplus.com",
+    "hulu.com",
+    "max.com",
+    "hbomax.com",
+    "primevideo.com",
+    "spotify.com",
+    "tiktok.com",
+    "instagram.com",
+    "facebook.com",
+    "twitch.tv",
+    ...STREAMING_CDN_HOSTS
+  ];
+
+  const DEFAULT_SETTINGS = {
+    saveAs: true,
+    folderName: "HarmonyMedia",
+    blockedHosts: DEFAULT_BLOCKED_HOSTS,
+    allowlistHosts: [],
+    maxCandidates: 50,
+    showPlaylists: true
+  };
+
+  const CONTENT_TYPE_EXTENSIONS = {
+    "video/mp4": "mp4",
+    "video/webm": "webm",
+    "video/quicktime": "mov",
+    "video/x-m4v": "m4v",
+    "video/ogg": "ogv",
+    "video/x-matroska": "mkv",
+    "video/x-msvideo": "avi",
+    "audio/mpeg": "mp3",
+    "audio/mp3": "mp3",
+    "audio/mp4": "m4a",
+    "audio/x-m4a": "m4a",
+    "audio/aac": "aac",
+    "audio/wav": "wav",
+    "audio/x-wav": "wav",
+    "audio/wave": "wav",
+    "audio/ogg": "ogg",
+    "audio/opus": "opus",
+    "audio/flac": "flac",
+    "audio/x-flac": "flac",
+    "audio/webm": "webm"
+  };
+
+  function baseContentType(contentType) {
+    return String(contentType || "").toLowerCase().split(";")[0].trim();
+  }
+
+  function hostnameOf(urlString) {
+    try {
+      return new URL(urlString).hostname.toLowerCase();
+    } catch {
+      return "";
+    }
+  }
+
+  // Accepts "example.com", "https://example.com/path", "*.example.com".
+  function normalizeHost(value) {
+    let host = String(value || "").trim().toLowerCase();
+    if (!host) return "";
+    host = host.replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
+    host = host.split(/[/?#]/)[0];
+    host = host.replace(/:\d+$/, "");
+    host = host.replace(/^\*\./, "").replace(/^\.+|\.+$/g, "");
+    return host;
+  }
+
+  function hostMatches(hostname, pattern) {
+    const value = normalizeHost(pattern);
+    if (!hostname || !value) return false;
+    return hostname === value || hostname.endsWith(`.${value}`);
+  }
+
+  function sanitizeFilename(name) {
+    let cleaned = String(name || "")
+      .split(/[\\/]/)
+      .pop()
+      .replace(/[<>:"|?*\u0000-\u001f]/g, "_")
+      .trim()
+      .replace(/^\.+/, "")
+      .replace(/[. ]+$/, "");
+    // Windows reserved device names.
+    if (/^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i.test(cleaned)) cleaned = `_${cleaned}`;
+    return cleaned.slice(0, 180) || "media-download";
+  }
+
+  function extensionForContentType(contentType) {
+    return CONTENT_TYPE_EXTENSIONS[baseContentType(contentType)] || "";
+  }
+
+  function hasExtension(name) {
+    return /\.[a-z0-9]{2,5}$/i.test(name);
+  }
+
+  function withExtension(name, contentType) {
+    if (hasExtension(name)) return name;
+    const ext = extensionForContentType(contentType);
+    return ext ? `${name}.${ext}` : name;
+  }
+
+  function filenameFromContentDisposition(header) {
+    const value = String(header || "");
+    const star = value.match(/filename\*\s*=\s*([^']*)'[^']*'([^;]+)/i);
+    if (star) {
+      try {
+        return decodeURIComponent(star[2].trim().replace(/^"|"$/g, ""));
+      } catch {
+        /* fall through to plain filename */
+      }
+    }
+    const plain = value.match(/filename\s*=\s*("([^"]*)"|[^;]+)/i);
+    if (plain) return (plain[2] ?? plain[1]).trim();
+    return "";
+  }
+
+  function filenameFromUrl(urlString, contentType = "") {
+    let name = "";
+    try {
+      name = decodeURIComponent(new URL(urlString).pathname.split("/").pop() || "");
+    } catch {
+      name = "";
+    }
+    name = sanitizeFilename(name || "media-download");
+    return sanitizeFilename(withExtension(name, contentType));
+  }
+
+  function classify(urlString, contentType) {
+    const type = baseContentType(contentType);
+    if (PLAYLIST_EXT.test(urlString) || type.includes("mpegurl") || type.includes("dash+xml")) {
+      return "playlist";
+    }
+    if (type.startsWith("audio/")) return "audio";
+    if (type.startsWith("video/")) return "video";
+    if (AUDIO_EXT.test(urlString)) return "audio";
+    if (MEDIA_EXT.test(urlString)) return "video";
+    return "unknown";
+  }
+
+  function isDirectMedia(urlString, contentType) {
+    return classify(urlString, contentType) !== "unknown";
+  }
+
+  // Players fetch media in ranges; Content-Length is then the size of one
+  // chunk. The full size is the total in "Content-Range: bytes 0-99/12345".
+  function totalSizeFromHeaders(contentRange, contentLength, statusCode) {
+    const range = String(contentRange || "").match(/\/\s*(\d+)\s*$/);
+    if (range) return Number(range[1]);
+    if (statusCode === 206) return 0;
+    const length = Number(contentLength || 0);
+    return Number.isFinite(length) && length > 0 ? length : 0;
+  }
+
+  // Every URL involved (the media itself, the page, the frame or initiator)
+  // must pass the blocklist; the allowlist must match at least one of them.
+  function isAllowed(urls, settings) {
+    const hosts = (Array.isArray(urls) ? urls : [urls]).map(hostnameOf).filter(Boolean);
+    if (!hosts.length) return false;
+    const blocked = settings.blockedHosts || [];
+    if (hosts.some((host) => blocked.some((pattern) => hostMatches(host, pattern)))) {
+      return false;
+    }
+    const allowlist = (settings.allowlistHosts || []).map(normalizeHost).filter(Boolean);
+    if (allowlist.length && !hosts.some((host) => allowlist.some((pattern) => hostMatches(host, pattern)))) {
+      return false;
+    }
+    return true;
+  }
+
+  function normalizeHostList(list) {
+    const seen = new Set();
+    for (const entry of Array.isArray(list) ? list : []) {
+      const host = normalizeHost(entry);
+      if (host) seen.add(host);
+    }
+    return [...seen];
+  }
+
+  function normalizeSettings(input) {
+    const raw = { ...DEFAULT_SETTINGS, ...(input || {}) };
+    const max = Math.round(Number(raw.maxCandidates));
+    return {
+      saveAs: Boolean(raw.saveAs),
+      showPlaylists: Boolean(raw.showPlaylists),
+      folderName: sanitizeFilename(String(raw.folderName || "").trim() || DEFAULT_SETTINGS.folderName).slice(0, 80),
+      maxCandidates: Number.isFinite(max) ? Math.min(100, Math.max(5, max)) : DEFAULT_SETTINGS.maxCandidates,
+      blockedHosts: normalizeHostList(raw.blockedHosts),
+      allowlistHosts: normalizeHostList(raw.allowlistHosts)
+    };
+  }
+
+  // URL patterns for the context menu so it only shows on media links.
+  function mediaLinkPatterns() {
+    return [...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS].flatMap((ext) => [
+      `*://*/*.${ext}*`,
+      `*://*/*.${ext.toUpperCase()}*`
+    ]);
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  const api = {
+    AUDIO_EXT,
+    MEDIA_EXT,
+    PLAYLIST_EXT,
+    STREAMING_CDN_HOSTS,
+    DEFAULT_BLOCKED_HOSTS,
+    DEFAULT_SETTINGS,
+    hostnameOf,
+    normalizeHost,
+    hostMatches,
+    sanitizeFilename,
+    extensionForContentType,
+    filenameFromContentDisposition,
+    filenameFromUrl,
+    withExtension,
+    classify,
+    isDirectMedia,
+    totalSizeFromHeaders,
+    isAllowed,
+    normalizeSettings,
+    mediaLinkPatterns,
+    escapeHtml
+  };
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = api;
+  } else {
+    root.HarmonyShared = api;
+  }
+})(typeof globalThis !== "undefined" ? globalThis : this);

@@ -15,6 +15,7 @@ After unzipping you should have this folder:
 harmony-media-saver-main/
   manifest.json
   service-worker.js
+  shared.js
   content-script.js
   popup.html
   popup.js
