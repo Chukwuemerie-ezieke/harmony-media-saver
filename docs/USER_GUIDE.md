@@ -4,7 +4,7 @@
 
 - Direct video files such as `.mp4`, `.webm`, `.mov`
 - Direct audio files such as `.mp3`, `.m4a`, `.wav`
-- Media already attached to a `<video>` or `<audio>` element as an `http(s)` URL
+- Media already attached to a `<video>` or `<audio>` element as an `http(s)` URL, including players inside embedded frames
 
 ## What you cannot save
 
@@ -26,7 +26,7 @@ The toolbar badge shows how many downloadable files were found on the current ta
 
 ## Right-click
 
-On a video, audio player, or a link that points to a media file, choose **Save media with Harmony Media Saver**.
+On a video or audio player, choose **Save media with Harmony Media Saver**. On a link that ends in a media extension (such as `.mp4` or `.mp3`), choose **Save linked media with Harmony Media Saver**. Right-click downloads appear in the local history.
 
 ## Filters
 
@@ -43,7 +43,7 @@ On a video, audio player, or a link that points to a media file, choose **Save m
 
 ## If nothing appears
 
-- Confirm the page is `http` or `https`
+- Confirm the page is `http` or `https` (pages opened from disk as `file://` are not scanned)
 - Confirm you are allowed to use that file
 - Start playback, then scan again
 - Check that the host is not blocked and is on the allowlist if you enabled one

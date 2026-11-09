@@ -15,7 +15,7 @@ Do not open pull requests that:
 
 1. Fork and branch from `main`
 2. Keep the branch focused
-3. Run `npm run validate`
+3. Run `npm run validate` and `npm test`
 4. Load the unpacked extension and test a page you are authorized to use
 5. Open a pull request using the template
 

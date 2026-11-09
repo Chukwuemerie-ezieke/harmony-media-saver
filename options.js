@@ -28,14 +28,22 @@ async function loadSettings() {
 async function loadHistory() {
   const result = await chrome.runtime.sendMessage({ type: "GET_HISTORY" });
   const history = result.history || [];
-  historyList.innerHTML = history.length
-    ? history
-        .map((item) => {
-          const when = new Date(item.downloadedAt).toLocaleString();
-          return `<li><strong>${item.filename}</strong> · ${when}<br />${item.url}</li>`;
-        })
-        .join("")
-    : "<li>No local history yet.</li>";
+  historyList.replaceChildren();
+  if (!history.length) {
+    const empty = document.createElement("li");
+    empty.textContent = "No local history yet.";
+    historyList.appendChild(empty);
+    return;
+  }
+  for (const item of history) {
+    const li = document.createElement("li");
+    const name = document.createElement("strong");
+    name.textContent = item.filename;
+    const when = new Date(item.downloadedAt).toLocaleString();
+    const via = item.source === "context-menu" ? " · right-click" : "";
+    li.append(name, ` · ${when}${via}`, document.createElement("br"), item.url);
+    historyList.appendChild(li);
+  }
 }
 
 form.addEventListener("submit", async (event) => {
@@ -60,7 +68,9 @@ form.addEventListener("submit", async (event) => {
 });
 
 document.querySelector("#resetButton").addEventListener("click", () => {
-  if (defaults) fillForm(defaults);
+  if (!defaults) return;
+  fillForm(defaults);
+  saveStatus.textContent = "Defaults restored in the form. Click Save settings to apply.";
 });
 
 document.querySelector("#clearHistoryButton").addEventListener("click", async () => {
