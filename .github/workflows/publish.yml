@@ -1,0 +1,83 @@
+name: Publish to Chrome Web Store
+
+# Started by hand only, so nothing reaches the store by accident.
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: "Submit for review after uploading (untick to upload a draft only)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: chrome-web-store
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run validate
+      - run: npm test
+      - run: npm run package
+
+      - name: Get access token
+        id: token
+        env:
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          for name in CLIENT_ID CLIENT_SECRET REFRESH_TOKEN; do
+            if [ -z "${!name}" ]; then echo "::error::Secret CWS_${name} is not set. See docs/PUBLISHING.md."; exit 1; fi
+          done
+          token=$(curl -sS --fail-with-body https://oauth2.googleapis.com/token \
+            -d client_id="$CLIENT_ID" -d client_secret="$CLIENT_SECRET" \
+            -d refresh_token="$REFRESH_TOKEN" -d grant_type=refresh_token | jq -r .access_token)
+          if [ -z "$token" ] || [ "$token" = "null" ]; then echo "::error::Could not get an access token"; exit 1; fi
+          echo "::add-mask::$token"
+          echo "access_token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package
+        env:
+          TOKEN: ${{ steps.token.outputs.access_token }}
+          PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+        run: |
+          if [ -z "$PUBLISHER_ID" ] || [ -z "$EXTENSION_ID" ]; then
+            echo "::error::Secrets CWS_PUBLISHER_ID and CWS_EXTENSION_ID must be set. See docs/PUBLISHING.md."; exit 1
+          fi
+          zip=$(ls dist/harmony-media-saver-*.zip)
+          echo "Uploading $zip"
+          response=$(curl -sS --fail-with-body -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -T "$zip" \
+            "https://chromewebstore.googleapis.com/upload/v2/publishers/$PUBLISHER_ID/items/$EXTENSION_ID:upload")
+          echo "$response" | jq .
+          if echo "$response" | grep -q '"FAILED"'; then echo "::error::Upload failed"; exit 1; fi
+
+      - name: Submit for review
+        if: ${{ inputs.submit }}
+        env:
+          TOKEN: ${{ steps.token.outputs.access_token }}
+          PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+        run: |
+          # The upload can take a moment to process; retry a few times.
+          for attempt in 1 2 3 4 5; do
+            if response=$(curl -sS --fail-with-body -X POST \
+              -H "Authorization: Bearer $TOKEN" \
+              "https://chromewebstore.googleapis.com/v2/publishers/$PUBLISHER_ID/items/$EXTENSION_ID:publish"); then
+              echo "$response" | jq .
+              exit 0
+            fi
+            echo "$response"
+            echo "Attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
+          echo "::error::Publish request failed"
+          exit 1
