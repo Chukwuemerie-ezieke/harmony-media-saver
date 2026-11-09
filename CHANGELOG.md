@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Chrome Web Store preparation: `npm run package` builds the store zip (runtime files only), CI uploads it as an artifact, store screenshots and promo tile in `store/`, full listing and privacy-practice copy in `docs/STORE_LISTING.md`, step-by-step `docs/PUBLISHING.md`, and a manually started workflow that uploads and publishes updates through the Chrome Web Store API (v2).
+
 ## 1.2.0 — 2026-11-09
 
 ### Added

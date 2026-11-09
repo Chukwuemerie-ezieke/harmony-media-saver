@@ -62,11 +62,14 @@ cd harmony-media-saver
 npm run validate   # manifest, files, icons, script syntax
 npm test           # unit tests for shared.js
 npm run example    # serve the test page on http://localhost:8080
+npm run package    # build dist/harmony-media-saver-<version>.zip for the Chrome Web Store
 ```
 
 Load the repo folder as an unpacked extension after each change, then click **Reload** on `chrome://extensions`.
 
 Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+Publishing: [docs/PUBLISHING.md](docs/PUBLISHING.md) · Store listing copy: [docs/STORE_LISTING.md](docs/STORE_LISTING.md)
 
 ## Compliance
 
