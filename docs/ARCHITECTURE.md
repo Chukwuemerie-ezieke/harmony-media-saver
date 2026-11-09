@@ -30,6 +30,8 @@ Chrome no longer allows a persistent background page. The service worker can sle
 | `manifest.json` | Permissions, entry points, content script |
 | `shared.js` | Pure helpers (classification, file names, sizes, host policy, settings validation); unit tested in `test/` |
 | `service-worker.js` | Detection merge (serialized), policy checks, downloads, message routing |
+| `i18n.js` | Interface text in five languages, language selection, `data-i18n` page translation |
+| `managed_schema.json` | Schema for administrator policy read from `chrome.storage.managed` |
 | `content-script.js` | Reads `video`/`audio` URLs already in the DOM, in every frame |
 | `popup.*` | Operator UI for the active tab |
 | `options.*` | Local policy and history |
@@ -43,6 +45,14 @@ Every candidate must pass:
 3. At least one of those hosts is on the allowlist when that list is non-empty
 4. Resource looks like direct media or an explicit playlist
 5. Playlists cannot be sent to `chrome.downloads` as a fake video file
+
+## Settings resolution
+
+`chrome.storage.local` holds the user's own settings. On every read the service worker merges `chrome.storage.managed` (administrator policy) on top: managed keys win, managed `blockedHosts` are prepended to the user's list. The result is validated by `normalizeSettings`. Options locks the managed fields.
+
+## Translations
+
+Chrome's `chrome.i18n` follows the browser UI language, and Chrome is not offered in Hausa, Yorùbá, Igbo or Pidgin, so the extension keeps its own dictionaries in `i18n.js` and lets the user choose. English is the reference; missing keys fall back to it. A test checks every key and placeholder against English.
 
 ## Messaging
 

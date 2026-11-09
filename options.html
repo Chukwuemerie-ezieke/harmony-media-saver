@@ -10,58 +10,86 @@
     <main>
       <header>
         <p class="eyebrow">Harmony Digital Consults</p>
-        <h1>Media Saver options</h1>
-        <p>These settings stay on this computer. The extension never uploads your browsing data.</p>
+        <h1 data-i18n="optionsTitle">Media Saver options</h1>
+        <p data-i18n="optionsIntro">These settings stay on this computer. The extension never uploads your browsing data.</p>
+        <p id="managedNotice" class="notice" data-i18n="managedNotice" hidden>Some settings are managed by your organisation and cannot be changed here.</p>
       </header>
 
       <form id="settingsForm">
         <label>
-          Download folder name
+          <span data-i18n="language">Language</span>
+          <select id="language" name="language"></select>
+          <small data-i18n="languageDraftNote">Hausa, Yorùbá, Igbo and Pidgin translations are drafts. Please report corrections.</small>
+        </label>
+
+        <label>
+          <span data-i18n="folderName">Download folder name</span>
           <input id="folderName" name="folderName" maxlength="80" required />
+        </label>
+
+        <label>
+          <span data-i18n="filenameTemplate">File name pattern</span>
+          <input id="filenameTemplate" name="filenameTemplate" maxlength="200" spellcheck="false" />
+          <small data-i18n="filenameTemplateHelp">Use / for subfolders. Tokens: {filename} {name} {ext} {site} {title} {date} {kind}</small>
+          <small id="templatePreview" class="preview"></small>
         </label>
 
         <label class="check">
           <input id="saveAs" name="saveAs" type="checkbox" />
-          Ask where to save each file
+          <span data-i18n="saveAs">Ask where to save each file</span>
         </label>
+        <small class="indent" data-i18n="saveAsBatchNote">Batch downloads always go straight to the download folder.</small>
 
         <label class="check">
           <input id="showPlaylists" name="showPlaylists" type="checkbox" />
-          Show streaming playlists as unsupported items
+          <span data-i18n="showPlaylists">Show streaming playlists as unsupported items</span>
         </label>
 
         <label>
-          Maximum items remembered per tab
+          <span data-i18n="maxCandidates">Maximum items remembered per tab</span>
           <input id="maxCandidates" name="maxCandidates" type="number" min="5" max="100" />
         </label>
 
         <label>
-          Blocked hosts (one per line)
-          <textarea id="blockedHosts" rows="8" spellcheck="false"></textarea>
-          <small>Checked against the media host, the page you are on, and any embedded player. Subdomains are included.</small>
+          <span data-i18n="blockedHosts">Blocked hosts (one per line)</span>
+          <textarea id="blockedHosts" name="blockedHosts" rows="8" spellcheck="false"></textarea>
+          <small data-i18n="blockedHostsHelp">Checked against the media host, the page you are on, and any embedded player. Subdomains are included.</small>
         </label>
 
         <label>
-          Allowlist hosts (optional, one per line)
-          <textarea id="allowlistHosts" rows="5" spellcheck="false" placeholder="learn.yourschool.edu.ng"></textarea>
-          <small>If this list is not empty, only these hosts are scanned.</small>
+          <span data-i18n="allowlistHosts">Allowlist hosts (optional, one per line)</span>
+          <textarea id="allowlistHosts" name="allowlistHosts" rows="5" spellcheck="false" placeholder="learn.yourschool.edu.ng"></textarea>
+          <small data-i18n="allowlistHelp">If this list is not empty, only these hosts are scanned.</small>
         </label>
 
         <div class="actions">
-          <button type="submit">Save settings</button>
-          <button id="resetButton" type="button">Restore defaults</button>
+          <button type="submit" data-i18n="saveSettings">Save settings</button>
+          <button id="resetButton" type="button" data-i18n="restoreDefaults">Restore defaults</button>
         </div>
         <p id="saveStatus" role="status"></p>
       </form>
 
       <section>
+        <h2 data-i18n="backupTitle">Back up or share settings</h2>
+        <p class="muted" data-i18n="backupHelp">Export your settings to a file, or import a file from another computer.</p>
+        <div class="actions start">
+          <button id="exportButton" type="button" data-i18n="exportSettings">Export settings</button>
+          <button id="importButton" type="button" data-i18n="importSettings">Import settings</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden />
+        </div>
+        <p id="backupStatus" class="muted" role="status"></p>
+      </section>
+
+      <section>
         <div class="section-head">
-          <h2>Local download history</h2>
-          <button id="clearHistoryButton" type="button">Clear history</button>
+          <h2 data-i18n="historyTitle">Local download history</h2>
+          <button id="clearHistoryButton" type="button" data-i18n="clearHistory">Clear history</button>
         </div>
         <ul id="historyList"></ul>
       </section>
     </main>
+    <script src="shared.js"></script>
+    <script src="i18n.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

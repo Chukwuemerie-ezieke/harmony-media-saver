@@ -25,6 +25,10 @@ All of that data stays in Chrome storage on your device (`chrome.storage.session
 
 The extension only contacts a remote host when you start a download. Chrome then requests that media URL directly, the same way a normal browser download works.
 
+## Settings files and administrator policy
+
+**Export settings** writes a file to your computer only. If your organisation manages Chrome, it may set some of the extension's settings through Chrome policy; those settings are read from Chrome on your device, not from Harmony Digital Consults.
+
 ## Your controls
 
 Use the Options page to clear history, edit the blocklist, or enable allowlist-only mode. Removing the extension deletes its local storage.

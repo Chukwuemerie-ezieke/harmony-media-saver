@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 — 2026-11-09
+
+### Added
+
+- **Batch download**: tick several files (or "Select all") in the popup and download them in one go. Batch downloads go straight to the download folder without a Save As dialog per file.
+- **File name patterns**: save files into subfolders such as `{site}/{title}/{filename}`. Tokens: `{filename}` `{name}` `{ext}` `{site}` `{title}` `{date}` `{kind}`. Options shows a live example. The default `{filename}` keeps the old behaviour.
+- **Settings export and import** as a JSON file, for copying a setup between computers.
+- **Central settings for schools** through Chrome policy (`managed_schema.json`). Managed values override the user's settings and are locked in Options; managed blocked hosts are added on top of the user's list. See `docs/ADMIN_GUIDE.md`.
+- **Interface languages**: English, Hausa, Yorùbá, Igbo and Nigerian Pidgin, chosen in Options (or automatic from the browser language). The non-English translations are drafts awaiting native-speaker review; missing strings fall back to English.
+- Download history records the full saved path and whether a file came from the popup, a batch or right-click.
+
+### Fixed
+
+- Options page text boxes overflowed their card on the right.
+
 ## 1.1.0 — 2026-11-09
 
 ### Fixed

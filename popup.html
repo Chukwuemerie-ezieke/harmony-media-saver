@@ -14,28 +14,37 @@
           <h1>Media Saver</h1>
         </div>
         <div class="header-actions">
-          <button id="scanButton" type="button">Scan</button>
-          <button id="optionsButton" type="button" title="Options">⚙</button>
+          <button id="scanButton" type="button" data-i18n="scan">Scan</button>
+          <button id="optionsButton" type="button" data-i18n-title="openOptions" data-i18n-aria-label="openOptions" title="Options">⚙</button>
         </div>
       </header>
 
-      <p id="status">Checking this tab…</p>
+      <p id="status" role="status" data-i18n="checking">Checking this tab…</p>
 
-      <nav class="filters" aria-label="Filter media">
-        <button type="button" data-filter="all" class="active">All</button>
-        <button type="button" data-filter="video">Video</button>
-        <button type="button" data-filter="audio">Audio</button>
-        <button type="button" data-filter="playlist">Playlists</button>
+      <nav class="filters" data-i18n-aria-label="filterLabel" aria-label="Filter media">
+        <button type="button" data-filter="all" class="active" data-i18n="filterAll">All</button>
+        <button type="button" data-filter="video" data-i18n="filterVideo">Video</button>
+        <button type="button" data-filter="audio" data-i18n="filterAudio">Audio</button>
+        <button type="button" data-filter="playlist" data-i18n="filterPlaylists">Playlists</button>
       </nav>
+
+      <div class="batch" id="batchBar" hidden>
+        <label class="select-all">
+          <input id="selectAll" type="checkbox" />
+          <span data-i18n="selectAll">Select all</span>
+        </label>
+        <button id="downloadSelected" type="button" disabled>Download selected (0)</button>
+      </div>
 
       <section id="candidateList" aria-live="polite"></section>
 
       <footer>
-        <button id="clearButton" type="button">Clear list</button>
-        <span>Only save media you are authorized to download.</span>
+        <button id="clearButton" type="button" data-i18n="clearList">Clear list</button>
+        <span data-i18n="authorizedOnly">Only save media you are authorized to download.</span>
       </footer>
     </main>
     <script src="shared.js"></script>
+    <script src="i18n.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

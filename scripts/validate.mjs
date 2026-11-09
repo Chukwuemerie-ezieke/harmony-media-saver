@@ -36,12 +36,14 @@ const referenced = [
   manifest.background?.service_worker,
   manifest.action?.default_popup,
   manifest.options_ui?.page,
+  manifest.storage?.managed_schema,
   ...(manifest.content_scripts || []).flatMap((entry) => [...(entry.js || []), ...(entry.css || [])])
 ].filter(Boolean);
 
 const files = [
   ...referenced,
   "shared.js",
+  "i18n.js",
   "popup.js",
   "popup.css",
   "options.js",
@@ -51,6 +53,16 @@ const files = [
 ];
 for (const file of new Set(files)) {
   if (!existsSync(file)) fail(`Missing file: ${file}`);
+}
+
+// The managed-policy schema must be valid JSON describing an object.
+if (manifest.storage?.managed_schema && existsSync(manifest.storage.managed_schema)) {
+  try {
+    const schema = JSON.parse(readFileSync(manifest.storage.managed_schema, "utf8"));
+    if (schema.type !== "object" || !schema.properties) fail("managed_schema.json must describe an object");
+  } catch (error) {
+    fail(`managed_schema.json is not valid JSON: ${error.message}`);
+  }
 }
 
 // Scripts the HTML pages and the service worker load must exist too.
@@ -64,7 +76,7 @@ for (const [, src] of readFileSync("service-worker.js", "utf8").matchAll(/import
 }
 
 // Syntax-check every script.
-for (const file of ["shared.js", "service-worker.js", "content-script.js", "popup.js", "options.js"]) {
+for (const file of ["shared.js", "i18n.js", "service-worker.js", "content-script.js", "popup.js", "options.js"]) {
   try {
     execFileSync(process.execPath, ["--check", file], { stdio: "pipe" });
   } catch (error) {

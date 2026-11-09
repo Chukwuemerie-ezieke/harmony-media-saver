@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "properties": {
+    "folderName": {
+      "title": "Download folder name",
+      "description": "Folder inside the user's Downloads folder where files are saved.",
+      "type": "string"
+    },
+    "filenameTemplate": {
+      "title": "File name pattern",
+      "description": "Relative path for each file. Tokens: {filename} {name} {ext} {site} {title} {date} {kind}. Use / for subfolders.",
+      "type": "string"
+    },
+    "saveAs": {
+      "title": "Ask where to save each file",
+      "type": "boolean"
+    },
+    "showPlaylists": {
+      "title": "Show streaming playlists as unsupported items",
+      "type": "boolean"
+    },
+    "maxCandidates": {
+      "title": "Maximum items remembered per tab (5-100)",
+      "type": "integer"
+    },
+    "language": {
+      "title": "Interface language",
+      "description": "One of: auto, en, ha, yo, ig, pcm.",
+      "type": "string"
+    },
+    "blockedHosts": {
+      "title": "Blocked hosts",
+      "description": "Added to the user's blocklist. Users cannot remove these.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "allowlistHosts": {
+      "title": "Allowlist hosts",
+      "description": "When set, only these hosts are scanned. Replaces the user's allowlist.",
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

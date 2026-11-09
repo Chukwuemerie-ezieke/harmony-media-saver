@@ -16,6 +16,8 @@ harmony-media-saver-main/
   manifest.json
   service-worker.js
   shared.js
+  i18n.js
+  managed_schema.json
   content-script.js
   popup.html
   popup.js
