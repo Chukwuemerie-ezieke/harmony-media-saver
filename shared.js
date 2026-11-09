@@ -61,7 +61,9 @@
     maxCandidates: 50,
     showPlaylists: true,
     filenameTemplate: "{filename}",
-    language: "auto"
+    language: "auto",
+    // Ask before downloading files bigger than this many MB (0 = never ask).
+    largeFileWarningMB: 500
   };
 
   const LANGUAGE_CODES = ["auto", "en", "ha", "yo", "ig", "pcm"];
@@ -228,6 +230,7 @@
     const raw = { ...DEFAULT_SETTINGS, ...(input || {}) };
     const max = Math.round(Number(raw.maxCandidates));
     const template = String(raw.filenameTemplate ?? "").trim().slice(0, 200);
+    const warnMB = Math.round(Number(raw.largeFileWarningMB));
     return {
       saveAs: Boolean(raw.saveAs),
       showPlaylists: Boolean(raw.showPlaylists),
@@ -236,7 +239,10 @@
       blockedHosts: normalizeHostList(raw.blockedHosts),
       allowlistHosts: normalizeHostList(raw.allowlistHosts),
       filenameTemplate: template || DEFAULT_SETTINGS.filenameTemplate,
-      language: LANGUAGE_CODES.includes(raw.language) ? raw.language : DEFAULT_SETTINGS.language
+      language: LANGUAGE_CODES.includes(raw.language) ? raw.language : DEFAULT_SETTINGS.language,
+      largeFileWarningMB: Number.isFinite(warnMB)
+        ? Math.min(100000, Math.max(0, warnMB))
+        : DEFAULT_SETTINGS.largeFileWarningMB
     };
   }
 
@@ -337,6 +343,19 @@
     ]);
   }
 
+  // Size in bytes above which the user is asked to confirm, or 0 for never.
+  function largeFileLimit(settings) {
+    const mb = Number(settings?.largeFileWarningMB || 0);
+    return mb > 0 ? mb * 1024 * 1024 : 0;
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes < 0) return "";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replaceAll("&", "&amp;")
@@ -374,6 +393,8 @@
     isAllowed,
     normalizeSettings,
     mediaLinkPatterns,
+    largeFileLimit,
+    formatBytes,
     escapeHtml
   };
 

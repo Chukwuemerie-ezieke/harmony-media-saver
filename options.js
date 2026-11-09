@@ -48,6 +48,7 @@ function readForm() {
     saveAs: form.saveAs.checked,
     showPlaylists: form.showPlaylists.checked,
     maxCandidates: Number(form.maxCandidates.value || 50),
+    largeFileWarningMB: Number(form.largeFileWarningMB.value || 0),
     blockedHosts: lines(form.blockedHosts.value),
     allowlistHosts: lines(form.allowlistHosts.value)
   };
@@ -60,6 +61,7 @@ function fillForm(settings) {
   form.saveAs.checked = Boolean(settings.saveAs);
   form.showPlaylists.checked = Boolean(settings.showPlaylists);
   form.maxCandidates.value = settings.maxCandidates;
+  form.largeFileWarningMB.value = settings.largeFileWarningMB;
   form.blockedHosts.value = (settings.blockedHosts || []).join("\n");
   form.allowlistHosts.value = (settings.allowlistHosts || []).join("\n");
   updatePreview();

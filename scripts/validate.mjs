@@ -44,6 +44,9 @@ const files = [
   ...referenced,
   "shared.js",
   "i18n.js",
+  "welcome.html",
+  "welcome.js",
+  "welcome.css",
   "popup.js",
   "popup.css",
   "options.js",
@@ -66,7 +69,7 @@ if (manifest.storage?.managed_schema && existsSync(manifest.storage.managed_sche
 }
 
 // Scripts the HTML pages and the service worker load must exist too.
-for (const page of ["popup.html", "options.html"]) {
+for (const page of ["popup.html", "options.html", "welcome.html"]) {
   for (const [, src] of readFileSync(page, "utf8").matchAll(/<script[^>]+src="([^"]+)"/g)) {
     if (!existsSync(src)) fail(`${page} loads missing script ${src}`);
   }
@@ -76,7 +79,7 @@ for (const [, src] of readFileSync("service-worker.js", "utf8").matchAll(/import
 }
 
 // Syntax-check every script.
-for (const file of ["shared.js", "i18n.js", "service-worker.js", "content-script.js", "popup.js", "options.js"]) {
+for (const file of ["shared.js", "i18n.js", "welcome.js", "service-worker.js", "content-script.js", "popup.js", "options.js"]) {
   try {
     execFileSync(process.execPath, ["--check", file], { stdio: "pipe" });
   } catch (error) {

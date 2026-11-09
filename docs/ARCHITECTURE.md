@@ -31,6 +31,7 @@ Chrome no longer allows a persistent background page. The service worker can sle
 | `shared.js` | Pure helpers (classification, file names, sizes, host policy, settings validation); unit tested in `test/` |
 | `service-worker.js` | Detection merge (serialized), policy checks, downloads, message routing |
 | `i18n.js` | Interface text in five languages, language selection, `data-i18n` page translation |
+| `welcome.*` | First-run guide and help page, opened on install and from the popup |
 | `managed_schema.json` | Schema for administrator policy read from `chrome.storage.managed` |
 | `content-script.js` | Reads `video`/`audio` URLs already in the DOM, in every frame |
 | `popup.*` | Operator UI for the active tab |
@@ -53,6 +54,10 @@ Every candidate must pass:
 ## Translations
 
 Chrome's `chrome.i18n` follows the browser UI language, and Chrome is not offered in Hausa, Yorùbá, Igbo or Pidgin, so the extension keeps its own dictionaries in `i18n.js` and lets the user choose. English is the reference; missing keys fall back to it. A test checks every key and placeholder against English.
+
+## Download progress
+
+When a download starts, the service worker records `candidateId → downloadId` in `chrome.storage.session` (`downloadsByCandidate`). The popup reads that map, polls `chrome.downloads.search` once a second while a download is running, and re-renders only when a download changes state.
 
 ## Messaging
 

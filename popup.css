@@ -161,3 +161,20 @@ footer span {
   accent-color: var(--teal);
 }
 .candidate .meta { flex: 1 1 auto; }
+
+.meta b { font-weight: inherit; }
+.meta b.large { color: #8a5a00; font-weight: 650; }
+.meta .progress { font-size: 11px; color: var(--teal); }
+.meta .progress:empty { display: none; }
+.meta .progress.complete { color: #2e7d32; }
+.meta .progress.interrupted { color: #b3261e; }
+
+.candidate button.warn, #downloadSelected.warn {
+  background: #8a5a00;
+  color: #fff;
+}
+
+footer > span { display: grid; gap: 4px; justify-items: end; text-align: right; }
+#helpLink { color: var(--teal); font-size: 11px; }
+.candidate .actions { flex: 0 0 auto; }
+.candidate .actions button { white-space: nowrap; }

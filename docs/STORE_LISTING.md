@@ -22,7 +22,8 @@ Harmony Media Saver helps teachers, students and school ICT teams keep a local c
 How it works
 • Open a page you are allowed to save media from and start playback if needed.
 • Click the Harmony Media Saver icon. It lists the direct video and audio files on the page with their real name, type and size.
-• Download one file, or tick several and download them together.
+• Download one file, or tick several and download them together, with live progress.
+• Asks before downloading very large files, to help protect mobile data.
 • Files are saved by Chrome's own download manager.
 
 Keep downloads organised

@@ -23,6 +23,11 @@
       "title": "Maximum items remembered per tab (5-100)",
       "type": "integer"
     },
+    "largeFileWarningMB": {
+      "title": "Ask before downloading files larger than (MB)",
+      "description": "0 turns the warning off.",
+      "type": "integer"
+    },
     "language": {
       "title": "Interface language",
       "description": "One of: auto, en, ha, yo, ig, pcm.",
@@ -32,13 +37,17 @@
       "title": "Blocked hosts",
       "description": "Added to the user's blocklist. Users cannot remove these.",
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "allowlistHosts": {
       "title": "Allowlist hosts",
       "description": "When set, only these hosts are scanned. Replaces the user's allowlist.",
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

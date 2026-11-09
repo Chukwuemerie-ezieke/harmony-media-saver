@@ -17,10 +17,16 @@ Object.values(manifest.icons || {}).forEach(add);
 Object.values(manifest.action?.default_icon || {}).forEach(add);
 for (const entry of manifest.content_scripts || []) [...(entry.js || []), ...(entry.css || [])].forEach(add);
 
-// Scripts and styles the pages and the service worker load.
-for (const page of [manifest.action?.default_popup, manifest.options_ui?.page].filter(Boolean)) {
+// Extension pages opened from code rather than the manifest.
+const EXTRA_PAGES = ["welcome.html"];
+EXTRA_PAGES.forEach(add);
+
+// Scripts, styles and images the pages load (local files only).
+for (const page of [manifest.action?.default_popup, manifest.options_ui?.page, ...EXTRA_PAGES].filter(Boolean)) {
   const html = readFileSync(page, "utf8");
-  for (const [, ref] of html.matchAll(/<(?:script[^>]+src|link[^>]+href)="([^"]+)"/g)) add(ref);
+  for (const [, ref] of html.matchAll(/<(?:script[^>]+src|link[^>]+href|img[^>]+src)="([^"#?]+)/g)) {
+    if (!/^[a-z]+:/i.test(ref)) add(ref);
+  }
 }
 for (const [, ref] of readFileSync(manifest.background.service_worker, "utf8").matchAll(/importScripts\("([^"]+)"\)/g)) {
   add(ref);

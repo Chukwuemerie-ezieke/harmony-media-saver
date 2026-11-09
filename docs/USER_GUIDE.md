@@ -24,6 +24,14 @@
 
 The toolbar badge shows how many downloadable files were found on the current tab.
 
+## Download progress
+
+After you click **Download**, the file shows its progress in the popup. When it finishes, **Show in folder** opens it in your file manager. If it fails or you cancel it, **Retry** starts it again. Progress is kept if you close and reopen the popup.
+
+## Large files and data use
+
+Files larger than the limit in Options (500 MB by default) show their size in amber, and **Download** asks once more ("Download 1.2 GB?") before starting. For batch downloads the total of the selected files is checked. Set the limit to 0 in Options to turn the question off.
+
 ## Download several files at once
 
 When two or more files are listed, tick the ones you want (or **Select all**) and click **Download selected**. Batch downloads go straight to your download folder, even if **Ask where to save each file** is on, so you are not shown one dialog per file.
@@ -46,7 +54,11 @@ For example, `{site}/{title}/{filename}` saves to `HarmonyMedia/learn.yourschool
 
 ## Language
 
-Choose **Language** in Options: English, Hausa, Yorùbá, Igbo or Nigerian Pidgin, or **Automatic** to follow the browser. The non-English translations are drafts; please report wording that is wrong or unclear.
+Choose **Language** in Options: English, Hausa, Yorùbá, Igbo or Nigerian Pidgin, or **Automatic** to follow the browser. Every screen is translated, but the non-English translations are drafts; please report wording that is wrong or unclear.
+
+## Welcome guide
+
+A short guide opens once when the extension is first installed. Open it again any time from **Why is nothing showing?** at the bottom of the popup.
 
 ## Copy your setup to another computer
 

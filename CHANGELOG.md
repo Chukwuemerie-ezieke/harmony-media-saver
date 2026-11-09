@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-11-09
+
+### Added
+
+- **Download progress in the popup**: each file you start shows live progress ("21% · 1.3 MB of 6.0 MB"), then *Saved* with **Show in folder**, or *Failed*/*Cancelled* with **Retry**. A running download can be cancelled. Progress survives closing and reopening the popup.
+- **Large-file warning to protect data**: files bigger than a limit (500 MB by default, set in Options, 0 turns it off) are highlighted, and Download asks once more ("Download 1.2 GB?") before starting. Batch downloads check the total of the selected files. Schools can set the limit through Chrome policy (`largeFileWarningMB`).
+- **Welcome guide** opened once on a fresh install (not on updates, and not when an organisation manages the extension): how to use it, what it saves and won't save, and *Why is nothing showing?*. The popup links to that section.
+- **Translations completed**: every interface string, including Options and the welcome guide, is now translated into Hausa, Yorùbá, Igbo and Nigerian Pidgin. They are still drafts awaiting native-speaker review. A test now fails if any language misses a string.
+
+### Store preparation
+
 
 - Chrome Web Store preparation: `npm run package` builds the store zip (runtime files only), CI uploads it as an artifact, store screenshots and promo tile in `store/`, full listing and privacy-practice copy in `docs/STORE_LISTING.md`, step-by-step `docs/PUBLISHING.md`, and a manually started workflow that uploads and publishes updates through the Chrome Web Store API (v2).
 
