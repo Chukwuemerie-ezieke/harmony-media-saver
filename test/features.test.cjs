@@ -101,7 +101,7 @@ test("every translation key exists in English and keeps its placeholders", () =>
 });
 
 test("every data-i18n key used in the pages exists in English", () => {
-  for (const page of ["popup.html", "options.html"]) {
+  for (const page of ["popup.html", "options.html", "welcome.html"]) {
     const html = fs.readFileSync(path.join(__dirname, "..", page), "utf8");
     for (const [, key] of html.matchAll(/data-i18n(?:-title|-aria-label)?="([^"]+)"/g)) {
       assert.ok(key in i18n.STRINGS.en, `${page} uses missing key ${key}`);
@@ -112,7 +112,8 @@ test("every data-i18n key used in the pages exists in English", () => {
 test("translator falls back to English and fills placeholders", () => {
   const t = i18n.translator("ha");
   assert.equal(t("foundMany", { count: 3 }), "An sami fayiloli 3 da za a iya saukewa.");
-  assert.equal(t("backupHelp"), i18n.STRINGS.en.backupHelp);
+  assert.equal(i18n.translator("xx")("scan"), i18n.STRINGS.en.scan);
+  assert.equal(t("noSuchKey"), "noSuchKey");
   assert.equal(i18n.resolveLanguage("auto", "yo-NG"), "yo");
   assert.equal(i18n.resolveLanguage("auto", "fr-FR"), "en");
   assert.equal(i18n.resolveLanguage("pcm", "en-US"), "pcm");
@@ -121,4 +122,28 @@ test("translator falls back to English and fills placeholders", () => {
 test("managed schema covers every setting", () => {
   const schema = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "managed_schema.json"), "utf8"));
   assert.deepEqual(Object.keys(schema.properties).sort(), [...shared.SETTING_KEYS].sort());
+});
+
+test("every language translates every key", () => {
+  const keys = Object.keys(i18n.STRINGS.en);
+  for (const [lang, table] of Object.entries(i18n.STRINGS)) {
+    const missing = keys.filter((key) => !(key in table));
+    assert.deepEqual(missing, [], `${lang} is missing ${missing.join(", ")}`);
+  }
+});
+
+test("large-file limit is clamped and can be turned off", () => {
+  assert.equal(shared.normalizeSettings({}).largeFileWarningMB, 500);
+  assert.equal(shared.normalizeSettings({ largeFileWarningMB: -5 }).largeFileWarningMB, 0);
+  assert.equal(shared.normalizeSettings({ largeFileWarningMB: "abc" }).largeFileWarningMB, 500);
+  assert.equal(shared.normalizeSettings({ largeFileWarningMB: 1e9 }).largeFileWarningMB, 100000);
+  assert.equal(shared.largeFileLimit({ largeFileWarningMB: 500 }), 500 * 1024 * 1024);
+  assert.equal(shared.largeFileLimit({ largeFileWarningMB: 0 }), 0);
+});
+
+test("formatBytes", () => {
+  assert.equal(shared.formatBytes(0), "");
+  assert.equal(shared.formatBytes(512), "512 B");
+  assert.equal(shared.formatBytes(1536), "1.5 KB");
+  assert.equal(shared.formatBytes(1610612736), "1.5 GB");
 });

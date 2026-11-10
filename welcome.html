@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to Harmony Media Saver</title>
+    <link rel="stylesheet" href="welcome.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="icons/icon-128.png" alt="" width="64" height="64" />
+        <div>
+          <p class="eyebrow">Harmony Digital Consults</p>
+          <h1 data-i18n="welcomeTitle">Welcome to Harmony Media Saver</h1>
+          <p class="lead" data-i18n="welcomeIntro">Save the lesson videos and audio your school already shares, straight to your computer.</p>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2 data-i18n="howTitle">How to use it</h2>
+        <ol>
+          <li data-i18n="how1">Open a page you are allowed to save media from, such as your school's learning platform.</li>
+          <li data-i18n="how2">Press play if the video or audio only loads when it starts.</li>
+          <li data-i18n="how3">Click the Harmony Media Saver icon in the toolbar. Pin it from the puzzle-piece menu so it is always visible.</li>
+          <li data-i18n="how4">Click Download, or tick several files and click Download selected.</li>
+        </ol>
+      </section>
+
+      <div class="columns">
+        <section class="card">
+          <h2 data-i18n="savesTitle">What it saves</h2>
+          <ul class="yes">
+            <li data-i18n="saves1">Video files such as MP4, WebM and MOV</li>
+            <li data-i18n="saves2">Audio files such as MP3, M4A and WAV</li>
+            <li data-i18n="saves3">Files a website already serves as a normal file</li>
+          </ul>
+        </section>
+        <section class="card">
+          <h2 data-i18n="notTitle">What it will not do</h2>
+          <ul class="no">
+            <li data-i18n="not1">Download from YouTube, Netflix and other streaming services</li>
+            <li data-i18n="not2">Bypass DRM, logins or paywalls</li>
+            <li data-i18n="not3">Join streaming playlists (HLS/DASH) into a video</li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="card" id="nothing">
+        <h2 data-i18n="nothingTitle">Why is nothing showing?</h2>
+        <ul>
+          <li data-i18n="nothing1">The page must start with http or https. Chrome settings pages, the Web Store and files opened from your computer are not scanned.</li>
+          <li data-i18n="nothing2">Press play, wait a moment, then click Scan.</li>
+          <li data-i18n="nothing3">The site may be on the blocked list, or not on your allowlist. Check Options.</li>
+          <li data-i18n="nothing4">Many modern players only stream in pieces and never expose a single file. Those cannot be saved.</li>
+          <li data-i18n="nothing5">If the page loaded before the extension was installed, reload the page.</li>
+        </ul>
+      </section>
+
+      <footer>
+        <button id="settingsButton" type="button" data-i18n="openSettings">Open settings</button>
+        <p data-i18n="welcomePrivacy">Everything stays on this computer: no account, no analytics, no servers.</p>
+        <p class="muted" data-i18n="authorizedOnly">Only save media you are authorized to download.</p>
+      </footer>
+    </main>
+    <script src="i18n.js"></script>
+    <script src="welcome.js"></script>
+  </body>
+</html>

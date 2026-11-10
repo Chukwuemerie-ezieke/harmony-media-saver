@@ -11,6 +11,7 @@ School ICT teams can push settings to every managed Chrome browser instead of co
 | `saveAs` | boolean | Ask where to save each file |
 | `showPlaylists` | boolean | Show streaming playlists as unsupported items |
 | `maxCandidates` | integer | Items remembered per tab (5–100) |
+| `largeFileWarningMB` | integer | Ask before downloading files larger than this many MB (0 = never ask) |
 | `language` | string | `auto`, `en`, `ha`, `yo`, `ig` or `pcm` |
 | `blockedHosts` | list of strings | **Added** to the user's blocklist; users cannot remove these |
 | `allowlistHosts` | list of strings | When set, only these hosts are scanned; replaces the user's allowlist |
@@ -62,6 +63,8 @@ Create `/etc/opt/chrome/policies/managed/harmony-media-saver.json` (Chromium: `/
   }
 }
 ```
+
+When any policy is set, the welcome guide is not opened on install, since the extension is already set up for the user.
 
 ## Checking it worked
 

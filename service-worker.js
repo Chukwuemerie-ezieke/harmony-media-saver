@@ -19,6 +19,7 @@ const {
 const CANDIDATES_KEY = "candidatesByTab";
 const SETTINGS_KEY = "settings";
 const HISTORY_KEY = "downloadHistory";
+const DOWNLOADS_KEY = "downloadsByCandidate";
 const HISTORY_LIMIT = 100;
 const EXTENSION_ORIGIN = chrome.runtime.getURL("");
 
@@ -255,6 +256,15 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
 
   createContextMenus();
+
+  // Show the welcome guide once on a fresh install, unless an organisation
+  // manages the extension (it is then set up for the user already).
+  if (details.reason === "install") {
+    const managed = await getManagedPolicy();
+    if (!Object.keys(managed).length) {
+      await chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") });
+    }
+  }
 });
 
 // --- Detection -----------------------------------------------------------
@@ -327,6 +337,20 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // --- Messages ------------------------------------------------------------
 
+// The popup shows progress for files started from it. The link between a
+// detected file and its Chrome download lives in session storage.
+function rememberDownload(candidateId, downloadId) {
+  if (!downloadId) return Promise.resolve();
+  return serialized(async () => {
+    const data = await chrome.storage.session.get(DOWNLOADS_KEY);
+    const map = data[DOWNLOADS_KEY] || {};
+    map[candidateId] = downloadId;
+    // Keep the map small; detections are per session anyway.
+    const entries = Object.entries(map).slice(-300);
+    await chrome.storage.session.set({ [DOWNLOADS_KEY]: Object.fromEntries(entries) });
+  });
+}
+
 async function downloadCandidate(tabId, candidateId, { source, saveAs } = {}) {
   const map = await getCandidatesMap();
   const candidate = (map[tabId] || []).find((item) => item.id === candidateId);
@@ -348,6 +372,7 @@ async function downloadCandidate(tabId, candidateId, { source, saveAs } = {}) {
       source,
       saveAs
     });
+    await rememberDownload(candidateId, downloadId);
     return { ok: true, downloadId };
   } catch (error) {
     return { ok: false, error: error?.message || String(error) };

@@ -51,6 +51,12 @@
         </label>
 
         <label>
+          <span data-i18n="largeFileWarningLabel">Ask before downloading files larger than (MB)</span>
+          <input id="largeFileWarningMB" name="largeFileWarningMB" type="number" min="0" max="100000" step="50" />
+          <small data-i18n="largeFileWarningHelp">Helps protect mobile data. Set to 0 to never ask.</small>
+        </label>
+
+        <label>
           <span data-i18n="blockedHosts">Blocked hosts (one per line)</span>
           <textarea id="blockedHosts" name="blockedHosts" rows="8" spellcheck="false"></textarea>
           <small data-i18n="blockedHostsHelp">Checked against the media host, the page you are on, and any embedded player. Subdomains are included.</small>
